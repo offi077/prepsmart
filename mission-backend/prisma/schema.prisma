@@ -1,0 +1,590 @@
+// Mission Control — Full Prisma Schema
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────
+
+enum UserRole {
+  STUDENT
+  EMPLOYEE
+  ADMIN
+  MENTOR
+  SUPER_ADMIN
+  OWNER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+}
+
+enum EmployeeCategoryEnum {
+  SUBJECT_MATTER_EXPERT
+  CONTENT_CREATOR
+  TEST_DEVELOPER
+  QUALITY_REVIEWER
+  CONTENT_MODERATOR
+  TECHNICAL_SUPPORT
+  REGIONAL_COORDINATOR
+}
+
+enum ExamLevelEnum {
+  PRELIMS
+  MAINS
+  BOTH
+}
+
+enum QuestionTypeEnum {
+  MCQ
+  MSQ
+  NUMERICAL
+}
+
+enum DifficultyEnum {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuizTypeEnum {
+  DAILY
+  RAPID_FIRE
+  MINI_TEST
+  SECTIONAL
+  FULL_PRELIMS
+  FULL_MAINS
+  SPEED_CHALLENGE
+}
+
+enum BlogStatusEnum {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TaskStatusEnum {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TaskTypeEnum {
+  CONTENT_CREATION
+  REVIEW
+  TEST_DEVELOPMENT
+  MODERATION
+  COORDINATION
+}
+
+enum PriorityEnum {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum SessionStatusEnum {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SubscriptionStatusEnum {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PENDING
+}
+
+enum NotificationTypeEnum {
+  INFO
+  WARNING
+  SUCCESS
+  ERROR
+  REMINDER
+}
+
+// ─────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────
+
+model User {
+  id                String              @id @default(uuid())
+  name              String
+  email             String              @unique
+  passwordHash      String
+  role              UserRole            @default(STUDENT)
+  status            UserStatus          @default(ACTIVE)
+  avatar            String?
+  targetExam        String?
+  secondaryExam     String?
+  examCategory      String?
+  state             String?
+  employeeCategory  EmployeeCategoryEnum?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relations
+  blogs             Blog[]              @relation("BlogAuthor")
+  examSessions      ExamSession[]
+  quizAttempts      QuizAttempt[]
+  enrollments       CourseEnrollment[]
+  studyTeamsCreated StudyTeam[]         @relation("TeamCreator")
+  studyTeamMembers  StudyTeamMember[]
+  mentorSessions    MentorshipSession[] @relation("MentorSessions")
+  studentSessions   MentorshipSession[] @relation("StudentSessions")
+  assignedTasks     Task[]              @relation("TaskAssignee")
+  createdTasks      Task[]              @relation("TaskCreator")
+  notifications     Notification[]
+  subscriptions     Subscription[]
+  leaderboardEntries LeaderboardEntry[]
+  doubtPosts        DoubtPost[]
+  doubtReplies      DoubtReply[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────
+// EXAM CATEGORY
+// ─────────────────────────────────────
+
+model ExamCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  exams     Exam[]
+  courses   Course[]
+
+  @@map("exam_categories")
+}
+
+// ─────────────────────────────────────
+// EXAMS & QUESTIONS
+// ─────────────────────────────────────
+
+model Exam {
+  id             String        @id @default(uuid())
+  title          String
+  description    String?
+  categoryId     String
+  examLevel      ExamLevelEnum
+  totalDuration  Int           // minutes
+  totalQuestions Int
+  instructions   Json          // string[]
+  languages      Json          // string[]
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  category       ExamCategory  @relation(fields: [categoryId], references: [id])
+  sections       ExamSection[]
+  sessions       ExamSession[]
+
+  @@map("exams")
+}
+
+model ExamSection {
+  id             String   @id @default(uuid())
+  examId         String
+  name           String
+  questionsCount Int
+  duration       Int?     // minutes, optional per-section time
+
+  exam           Exam       @relation(fields: [examId], references: [id], onDelete: Cascade)
+  questions      Question[]
+
+  @@map("exam_sections")
+}
+
+model Question {
+  id            String           @id @default(uuid())
+  sectionId     String
+  type          QuestionTypeEnum
+  questionText  String
+  options       Json?            // { id, text }[]
+  correctAnswer Json             // string | string[]
+  marks         Float            @default(1)
+  negativeMarks Float            @default(0)
+  explanation   String?
+  imageUrl      String?
+  createdAt     DateTime         @default(now())
+
+  section       ExamSection      @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+}
+
+model ExamSession {
+  id            String   @id @default(uuid())
+  userId        String
+  examId        String
+  startTime     DateTime @default(now())
+  endTime       DateTime?
+  answers       Json?    // Record<questionId, answer>
+  score         Float?
+  totalMarks    Float?
+  percentage    Float?
+  sectionScores Json?    // Record<sectionId, { attempted, correct, score }>
+  isSubmitted   Boolean  @default(false)
+  timeTaken     Int?     // seconds
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id])
+  exam          Exam     @relation(fields: [examId], references: [id])
+
+  @@map("exam_sessions")
+}
+
+// ─────────────────────────────────────
+// QUIZZES
+// ─────────────────────────────────────
+
+model Quiz {
+  id            String        @id @default(uuid())
+  type          QuizTypeEnum
+  title         String
+  description   String?
+  subject       String
+  totalQuestions Int
+  duration      Int           // minutes
+  difficulty    DifficultyEnum
+  examLevel     ExamLevelEnum
+  scheduledDate DateTime?
+  isLocked      Boolean       @default(false)
+  isActive      Boolean       @default(true)
+  questions     Json          // quiz questions embedded
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  attempts      QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizAttempt {
+  id        String   @id @default(uuid())
+  userId    String
+  quizId    String
+  answers   Json?
+  score     Float?
+  timeTaken Int?     // seconds
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+
+  @@map("quiz_attempts")
+}
+
+// ─────────────────────────────────────
+// COURSES
+// ─────────────────────────────────────
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  categoryId  String?
+  subjects    Json?    // string[]
+  price       Float    @default(0)
+  isPaid      Boolean  @default(false)
+  thumbnail   String?
+  content     Json?    // course content/modules
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    ExamCategory?     @relation(fields: [categoryId], references: [id])
+  enrollments CourseEnrollment[]
+
+  @@map("courses")
+}
+
+model CourseEnrollment {
+  id         String   @id @default(uuid())
+  userId     String
+  courseId    String
+  progress   Float    @default(0) // percentage
+  completedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("course_enrollments")
+}
+
+// ─────────────────────────────────────
+// BLOG
+// ─────────────────────────────────────
+
+model Blog {
+  id              String         @id @default(uuid())
+  title           String
+  slug            String         @unique
+  content         String         // HTML content
+  excerpt         String?
+  category        String
+  tags            Json?          // string[]
+  authorId        String
+  featuredImage   String?
+  status          BlogStatusEnum @default(DRAFT)
+  scheduledDate   DateTime?
+  publishedDate   DateTime?
+  views           Int            @default(0)
+  readTime        Int?           // minutes
+  seoMeta         Json?          // { metaTitle, metaDescription, keywords }
+  aiGenerated     Boolean        @default(false)
+  plagiarismScore Float?
+  sources         Json?          // Source[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  author          User           @relation("BlogAuthor", fields: [authorId], references: [id])
+
+  @@map("blogs")
+}
+
+// ─────────────────────────────────────
+// CURRENT AFFAIRS
+// ─────────────────────────────────────
+
+model CurrentAffair {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  topic     String
+  date      DateTime
+  category  String
+  tags      Json?    // string[]
+  imageUrl  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("current_affairs")
+}
+
+// ─────────────────────────────────────
+// DOWNLOADS
+// ─────────────────────────────────────
+
+model Download {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  fileUrl     String
+  category    String
+  fileType    String   // pdf, doc, etc.
+  fileSize    Int?     // bytes
+  downloads   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("downloads")
+}
+
+// ─────────────────────────────────────
+// STUDY TEAMS
+// ─────────────────────────────────────
+
+model StudyTeam {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  maxMembers  Int               @default(10)
+  createdById String
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  createdBy   User              @relation("TeamCreator", fields: [createdById], references: [id])
+  members     StudyTeamMember[]
+
+  @@map("study_teams")
+}
+
+model StudyTeamMember {
+  id       String   @id @default(uuid())
+  teamId   String
+  userId   String
+  role     String   @default("member") // member, leader
+  joinedAt DateTime @default(now())
+
+  team     StudyTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@map("study_team_members")
+}
+
+// ─────────────────────────────────────
+// MENTORSHIP
+// ─────────────────────────────────────
+
+model MentorshipSession {
+  id          String            @id @default(uuid())
+  mentorId    String
+  studentId   String
+  scheduledAt DateTime
+  duration    Int               // minutes
+  status      SessionStatusEnum @default(SCHEDULED)
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  mentor      User              @relation("MentorSessions", fields: [mentorId], references: [id])
+  student     User              @relation("StudentSessions", fields: [studentId], references: [id])
+
+  @@map("mentorship_sessions")
+}
+
+// ─────────────────────────────────────
+// TASKS (Employee / Mentor)
+// ─────────────────────────────────────
+
+model Task {
+  id             String         @id @default(uuid())
+  title          String
+  description    String?
+  type           TaskTypeEnum
+  priority       PriorityEnum   @default(MEDIUM)
+  assignedToId   String?
+  assignedById   String
+  deadline       DateTime?
+  estimatedHours Float?
+  status         TaskStatusEnum @default(PENDING)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  assignedTo     User?          @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  assignedBy     User           @relation("TaskCreator", fields: [assignedById], references: [id])
+
+  @@map("tasks")
+}
+
+// ─────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────
+
+model Notification {
+  id        String               @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationTypeEnum @default(INFO)
+  isRead    Boolean              @default(false)
+  createdAt DateTime             @default(now())
+
+  user      User                 @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────
+// PAYMENTS & SUBSCRIPTIONS
+// ─────────────────────────────────────
+
+model PaymentPlan {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  duration    Int            // days
+  features    Json?          // string[]
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("payment_plans")
+}
+
+model Subscription {
+  id        String                 @id @default(uuid())
+  userId    String
+  planId    String
+  startDate DateTime               @default(now())
+  endDate   DateTime
+  status    SubscriptionStatusEnum @default(ACTIVE)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  user      User                   @relation(fields: [userId], references: [id])
+  plan      PaymentPlan            @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+
+// ─────────────────────────────────────
+// LEADERBOARD
+// ─────────────────────────────────────
+
+model LeaderboardEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  category  String   // quiz type or exam category
+  score     Float
+  rank      Int?
+  period    String   // daily, weekly, monthly, all-time
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("leaderboard_entries")
+}
+
+// ─────────────────────────────────────
+// DOUBT FORUM
+// ─────────────────────────────────────
+
+model DoubtPost {
+  id        String       @id @default(uuid())
+  userId    String
+  title     String
+  content   String
+  subject   String
+  tags      Json?        // string[]
+  isResolved Boolean     @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  user      User         @relation(fields: [userId], references: [id])
+  replies   DoubtReply[]
+
+  @@map("doubt_posts")
+}
+
+model DoubtReply {
+  id        String   @id @default(uuid())
+  postId    String
+  userId    String
+  content   String
+  isAccepted Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  post      DoubtPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("doubt_replies")
+}
