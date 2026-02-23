@@ -10,6 +10,9 @@ import { QuizzesModule } from './quizzes/quizzes.module.js';
 import { CoursesModule } from './courses/courses.module.js';
 import { BlogModule } from './blog/blog.module.js';
 import { ContentModule } from './content/content.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
+import { PaymentsModule } from './payments/payments.module.js';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { ContentModule } from './content/content.module.js';
     CoursesModule,
     BlogModule,
     ContentModule,
+    NotificationsModule,
+    PaymentsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
