@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { StudyTeamsService } from './study-teams.service.js';
 import { CreateStudyTeamDto, UpdateStudyTeamDto } from './dto/study-team.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,18 +9,22 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Study Teams')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('study-teams')
 export class StudyTeamsController {
     constructor(private readonly studyTeamsService: StudyTeamsService) { }
 
     // GET /api/study-teams/my — my teams
+    @ApiOperation({ summary: 'Get all teams I am a member of' })
     @Get('my')
     getMyTeams(@Request() req: any) {
         return this.studyTeamsService.getMyTeams(req.user.sub);
     }
 
     // POST /api/study-teams — create team
+    @ApiOperation({ summary: 'Create a study team (creator auto-added as leader)' })
     @Post()
     create(@Request() req: any, @Body() dto: CreateStudyTeamDto) {
         return this.studyTeamsService.create(req.user.sub, dto);

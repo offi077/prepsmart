@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service.js';
 import { CreatePlanDto, UpdatePlanDto, CreateSubscriptionDto } from './dto/payment.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,6 +9,7 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Payments')
 @Controller('payments')
 export class PaymentsController {
     constructor(private readonly paymentsService: PaymentsService) { }
@@ -65,12 +67,16 @@ export class PaymentsController {
         return this.paymentsService.getMySubscriptionHistory(req.user.sub);
     }
 
+    @ApiBearerAuth('JWT')
+    @ApiOperation({ summary: 'Subscribe to a plan' })
     @UseGuards(JwtAuthGuard)
     @Post('subscribe')
     subscribe(@Request() req: any, @Body() dto: CreateSubscriptionDto) {
         return this.paymentsService.subscribe(req.user.sub, dto);
     }
 
+    @ApiBearerAuth('JWT')
+    @ApiOperation({ summary: 'Cancel active subscription' })
     @UseGuards(JwtAuthGuard)
     @Post('cancel')
     cancel(@Request() req: any) {
@@ -91,6 +97,8 @@ export class PaymentsController {
         );
     }
 
+    @ApiBearerAuth('JWT')
+    @ApiOperation({ summary: 'Revenue summary by plan (owner+)' })
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.OWNER, UserRole.SUPER_ADMIN)
     @Get('revenue')

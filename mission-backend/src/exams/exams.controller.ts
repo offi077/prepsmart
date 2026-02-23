@@ -13,6 +13,7 @@ import {
     ParseIntPipe,
     Optional,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ExamsService } from './exams.service.js';
 import { CreateExamDto, UpdateExamDto, CreateSectionDto, UpdateSectionDto } from './dto/exam.dto.js';
 import { CreateQuestionDto, UpdateQuestionDto, SubmitExamDto } from './dto/question.dto.js';
@@ -21,6 +22,8 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Exams')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('exams')
 export class ExamsController {
@@ -31,6 +34,7 @@ export class ExamsController {
     // ═══════════════════════════════════════════════════════════
 
     // POST /api/exams — Create exam (admin, employee)
+    @ApiOperation({ summary: 'Create a new exam (admin/employee)' })
     @Post()
     @UseGuards(RolesGuard)
     @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.EMPLOYEE)
@@ -39,6 +43,7 @@ export class ExamsController {
     }
 
     // GET /api/exams — List exams (all authenticated users)
+    @ApiOperation({ summary: 'List active exams (filterable by category/level)' })
     @Get()
     findAllExams(
         @Query('categoryId') categoryId?: string,
@@ -165,12 +170,14 @@ export class ExamsController {
     // ═══════════════════════════════════════════════════════════
 
     // POST /api/exams/:id/start — Start an exam
+    @ApiOperation({ summary: 'Start an exam session (student)' })
     @Post(':id/start')
     startExam(@Request() req: any, @Param('id') examId: string) {
         return this.examsService.startExam(req.user.sub, examId);
     }
 
     // POST /api/exams/sessions/:sessionId/submit — Submit answers
+    @ApiOperation({ summary: 'Submit exam answers — auto-scored (MCQ/MSQ/Numerical + negative marks)' })
     @Post('sessions/:sessionId/submit')
     submitExam(
         @Request() req: any,

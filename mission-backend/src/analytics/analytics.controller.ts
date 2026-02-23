@@ -1,18 +1,22 @@
 import {
     Controller, Get, Param, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Analytics')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('analytics')
 export class AnalyticsController {
     constructor(private readonly analyticsService: AnalyticsService) { }
 
     // GET /api/analytics/me — student's own performance
+    @ApiOperation({ summary: 'My performance: exam history, quiz stats, course progress' })
     @Get('me')
     getMyPerformance(@Request() req: any) {
         return this.analyticsService.getStudentPerformance(req.user.sub);
@@ -43,6 +47,7 @@ export class AnalyticsController {
     }
 
     // GET /api/analytics/leaderboard — top students overall
+    @ApiOperation({ summary: 'Top students leaderboard (optional filter by examId)' })
     @Get('leaderboard')
     getLeaderboard(
         @Query('examId') examId?: string,

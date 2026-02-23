@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { CoursesService } from './courses.service.js';
 import { CreateCourseDto, UpdateCourseDto } from './dto/course.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,12 +9,15 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Courses')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('courses')
 export class CoursesController {
     constructor(private readonly coursesService: CoursesService) { }
 
     // GET /api/courses/my-enrollments
+    @ApiOperation({ summary: 'Get my enrolled courses' })
     @Get('my-enrollments')
     getMyEnrollments(@Request() req: any) {
         return this.coursesService.getMyEnrollments(req.user.sub);
@@ -66,12 +70,14 @@ export class CoursesController {
     }
 
     // POST /api/courses/:id/enroll
+    @ApiOperation({ summary: 'Enroll in a course' })
     @Post(':id/enroll')
     enroll(@Request() req: any, @Param('id') courseId: string) {
         return this.coursesService.enroll(req.user.sub, courseId);
     }
 
     // PATCH /api/courses/:id/progress
+    @ApiOperation({ summary: 'Update course progress percentage' })
     @Patch(':id/progress')
     updateProgress(
         @Request() req: any,

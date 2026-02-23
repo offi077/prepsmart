@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service.js';
 import { CreateNotificationDto, BroadcastNotificationDto } from './dto/notification.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,12 +9,15 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Notifications')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('notifications')
 export class NotificationsController {
     constructor(private readonly notificationsService: NotificationsService) { }
 
     // GET /api/notifications — my notifications
+    @ApiOperation({ summary: 'Get my notifications (paginated, with unread count)' })
     @Get()
     getMyNotifications(
         @Request() req: any,
@@ -52,6 +56,7 @@ export class NotificationsController {
     }
 
     // POST /api/notifications — create (admin only)
+    @ApiOperation({ summary: 'Create notification for a specific user (admin+)' })
     @Post()
     @UseGuards(RolesGuard)
     @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.OWNER)
@@ -60,6 +65,7 @@ export class NotificationsController {
     }
 
     // POST /api/notifications/broadcast — broadcast to role (admin only)
+    @ApiOperation({ summary: 'Broadcast notification to all users or by role (admin+)' })
     @Post('broadcast')
     @UseGuards(RolesGuard)
     @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.OWNER)

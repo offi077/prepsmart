@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { QuizzesService } from './quizzes.service.js';
 import { CreateQuizDto, UpdateQuizDto, SubmitQuizDto, QueryQuizzesDto } from './dto/quiz.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,12 +9,15 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Quizzes')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('quizzes')
 export class QuizzesController {
     constructor(private readonly quizzesService: QuizzesService) { }
 
     // GET /api/quizzes/daily — today's daily quiz
+    @ApiOperation({ summary: "Get today's daily quiz" })
     @Get('daily')
     getDailyQuiz() {
         return this.quizzesService.getDailyQuiz();
@@ -62,6 +66,7 @@ export class QuizzesController {
     }
 
     // POST /api/quizzes/:id/attempt — submit quiz attempt
+    @ApiOperation({ summary: 'Submit quiz attempt — auto-scored' })
     @Post(':id/attempt')
     submitAttempt(@Request() req: any, @Param('id') quizId: string, @Body() dto: SubmitQuizDto) {
         return this.quizzesService.submitAttempt(req.user.sub, quizId, dto);

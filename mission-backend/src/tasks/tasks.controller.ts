@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TasksService } from './tasks.service.js';
 import { CreateTaskDto, UpdateTaskDto } from './dto/task.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,12 +9,15 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Tasks')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
     constructor(private readonly tasksService: TasksService) { }
 
     // GET /api/tasks/my — tasks assigned to me
+    @ApiOperation({ summary: 'Get tasks assigned to me' })
     @Get('my')
     getMyTasks(
         @Request() req: any,
@@ -28,6 +32,7 @@ export class TasksController {
     }
 
     // POST /api/tasks — create task (employee/mentor/admin)
+    @ApiOperation({ summary: 'Create and assign a task (employee/mentor/admin)' })
     @Post()
     @UseGuards(RolesGuard)
     @Roles(UserRole.EMPLOYEE, UserRole.MENTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.OWNER)

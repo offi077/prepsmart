@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { MentorshipService } from './mentorship.service.js';
 import { CreateMentorshipSessionDto, UpdateMentorshipSessionDto } from './dto/mentorship.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,12 +9,15 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
+@ApiTags('Mentorship')
+@ApiBearerAuth('JWT')
 @UseGuards(JwtAuthGuard)
 @Controller('mentorship')
 export class MentorshipController {
     constructor(private readonly mentorshipService: MentorshipService) { }
 
     // GET /api/mentorship/my-sessions — student's sessions
+    @ApiOperation({ summary: 'Get sessions I am enrolled in as a student' })
     @Get('my-sessions')
     getMyStudentSessions(
         @Request() req: any,
@@ -58,6 +62,7 @@ export class MentorshipController {
     }
 
     // POST /api/mentorship — schedule session (mentor)
+    @ApiOperation({ summary: 'Schedule a mentorship session (mentor only)' })
     @Post()
     @UseGuards(RolesGuard)
     @Roles(UserRole.MENTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.OWNER)

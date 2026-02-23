@@ -1,6 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, Request,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BlogService } from './blog.service.js';
 import { CreateBlogDto, UpdateBlogDto } from './dto/blog.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -8,11 +9,13 @@ import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole, BlogStatusEnum } from '../../generated/prisma/enums.js';
 
+@ApiTags('Blog')
 @Controller('blog')
 export class BlogController {
     constructor(private readonly blogService: BlogService) { }
 
     // Public endpoints (no auth)
+    @ApiOperation({ summary: 'List published blog posts (public)' })
     @Get()
     findAll(
         @Query('category') category?: string,
@@ -28,6 +31,7 @@ export class BlogController {
         });
     }
 
+    @ApiOperation({ summary: 'Get post by slug + increment view count (public)' })
     @Get('slug/:slug')
     findBySlug(@Param('slug') slug: string) {
         return this.blogService.findBySlug(slug);
@@ -45,6 +49,8 @@ export class BlogController {
         return this.blogService.findAllAdmin({ status, page: page ? parseInt(page) : 1, limit: limit ? parseInt(limit) : 20 });
     }
 
+    @ApiBearerAuth('JWT')
+    @ApiOperation({ summary: 'Create blog post (employee+)' })
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.EMPLOYEE)
     @Post()
