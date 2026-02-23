@@ -13,6 +13,9 @@ import { ContentModule } from './content/content.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { AnalyticsModule } from './analytics/analytics.module.js';
+import { StudyTeamsModule } from './study-teams/study-teams.module.js';
+import { MentorshipModule } from './mentorship/mentorship.module.js';
+import { TasksModule } from './tasks/tasks.module.js';
 
 @Module({
   imports: [
@@ -28,6 +31,9 @@ import { AnalyticsModule } from './analytics/analytics.module.js';
     NotificationsModule,
     PaymentsModule,
     AnalyticsModule,
+    StudyTeamsModule,
+    MentorshipModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
