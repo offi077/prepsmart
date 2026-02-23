@@ -42,51 +42,51 @@ const demoAccounts = [
     icon: User,
     color: 'bg-blue-500'
   },
-  {
-    role: 'mentor',
-    email: 'mentor@example.com',
-    password: 'password123',
-    name: 'Mentor User',
-    description: 'Manage students, assign tasks, and track progress',
-    icon: UserCheck,
-    color: 'bg-green-500'
-  },
-  {
-    role: 'employee',
-    email: 'employee@example.com',
-    password: 'password123',
-    name: 'Employee User',
-    description: 'General employee dashboard',
-    icon: Building,
-    color: 'bg-purple-500'
-  },
-  {
-    role: 'admin',
-    email: 'admin@example.com',
-    password: 'password123',
-    name: 'General Admin',
-    description: 'Manage users, content, and system settings',
-    icon: Shield,
-    color: 'bg-orange-500'
-  },
-  {
-    role: 'super-admin',
-    email: 'superadmin@example.com',
-    password: 'password123',
-    name: 'Super Admin',
-    description: 'Full system access and advanced administration',
-    icon: Crown,
-    color: 'bg-red-500'
-  },
-  {
-    role: 'owner',
-    email: 'owner@example.com',
-    password: 'password123',
-    name: 'Owner User',
-    description: 'Complete platform ownership and control',
-    icon: Crown,
-    color: 'bg-yellow-500'
-  },
+  // {
+  //   role: 'mentor',
+  //   email: 'mentor@example.com',
+  //   password: 'password123',
+  //   name: 'Mentor User',
+  //   description: 'Manage students, assign tasks, and track progress',
+  //   icon: UserCheck,
+  //   color: 'bg-green-500'
+  // },
+  // {
+  //   role: 'employee',
+  //   email: 'employee@example.com',
+  //   password: 'password123',
+  //   name: 'Employee User',
+  //   description: 'General employee dashboard',
+  //   icon: Building,
+  //   color: 'bg-purple-500'
+  // },
+  // {
+  //   role: 'admin',
+  //   email: 'admin@example.com',
+  //   password: 'password123',
+  //   name: 'General Admin',
+  //   description: 'Manage users, content, and system settings',
+  //   icon: Shield,
+  //   color: 'bg-orange-500'
+  // },
+  // {
+  //   role: 'super-admin',
+  //   email: 'superadmin@example.com',
+  //   password: 'password123',
+  //   name: 'Super Admin',
+  //   description: 'Full system access and advanced administration',
+  //   icon: Crown,
+  //   color: 'bg-red-500'
+  // },
+  // {
+  //   role: 'owner',
+  //   email: 'owner@example.com',
+  //   password: 'password123',
+  //   name: 'Owner User',
+  //   description: 'Complete platform ownership and control',
+  //   icon: Crown,
+  //   color: 'bg-yellow-500'
+  // },
 ];
 
 
@@ -221,11 +221,10 @@ const AuthModal = ({ activeTab, setActiveTab, selectedExam, onClose, onRegistrat
           {/* Quick Demo Login Section */}
           <div className="space-y-4">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">Try Demo Accounts</h3>
-              <p className="text-sm text-gray-600 mb-4">Quick access to explore different user roles</p>
+              <h3 className="text-lg font-semibold mb-2">Try Demo Account</h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-wrap justify-center gap-4">
               {demoAccounts.slice(0, 4).map((account) => (
                 <Button
                   key={account.role}
@@ -238,13 +237,13 @@ const AuthModal = ({ activeTab, setActiveTab, selectedExam, onClose, onRegistrat
                   </div>
                   <div className="text-center">
                     <div className="font-medium text-sm">{account.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">{account.description}</div>
+                    <div className="text-xs text-gray-500 mt-1 text-wrap">{account.description}</div>
                   </div>
                 </Button>
               ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/*<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {demoAccounts.slice(4).map((account) => (
                 <Button
                   key={account.role}
@@ -261,8 +260,7 @@ const AuthModal = ({ activeTab, setActiveTab, selectedExam, onClose, onRegistrat
                   </div>
                 </Button>
               ))}
-            </div>
-
+            </div>*/}
 
           </div>
 
@@ -271,7 +269,7 @@ const AuthModal = ({ activeTab, setActiveTab, selectedExam, onClose, onRegistrat
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-gray-500">Or login manually</span>
+              <span className="bg-white px-2 text-gray-500">Login</span>
             </div>
           </div>
 
@@ -391,11 +389,11 @@ const AuthModal = ({ activeTab, setActiveTab, selectedExam, onClose, onRegistrat
                 </SelectTrigger>
                 <SelectContent className="bg-white border shadow-lg z-50">
                   <SelectItem value="student" className="text-base py-3">Student</SelectItem>
-                  <SelectItem value="mentor" className="text-base py-3">Mentor</SelectItem>
+                  {/*<SelectItem value="mentor" className="text-base py-3">Mentor</SelectItem>
                   <SelectItem value="employee" className="text-base py-3">Employee</SelectItem>
                   <SelectItem value="admin" className="text-base py-3">Admin</SelectItem>
                   <SelectItem value="super-admin" className="text-base py-3">Super Admin</SelectItem>
-                  <SelectItem value="owner" className="text-base py-3">Owner</SelectItem>
+                  <SelectItem value="owner" className="text-base py-3">Owner</SelectItem>*/}
                 </SelectContent>
               </Select>
             </div>

@@ -10,7 +10,6 @@ import MediaMentions from '@/components/landing/MediaMentions';
 import ComparisonTable from '@/components/landing/ComparisonTable';
 import FAQSection from '@/components/landing/FAQSection';
 
-import SocialProofTicker from '@/components/landing/SocialProofTicker';
 import Footer from '@/components/layout/Footer';
 
 const Index = () => {
@@ -30,7 +29,6 @@ const Index = () => {
 
       </main>
       <Footer />
-      <SocialProofTicker />
     </div>
   );
 };
